@@ -70,7 +70,7 @@ export const useAuthForm = ({
       setTokens(String(accessToken), String(refreshToken))
       dispatch(setAuthState(true))
 
-      window.location.href = '/'
+      router.push('/')
     },
     onError: (error: Error) =>
       setSnackbar({

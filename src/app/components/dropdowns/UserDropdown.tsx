@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
+import { useRouter } from 'next/navigation'
 
 import { setAuthState } from '@/store'
 import { useUser, useClickOutside } from '@/hooks'
@@ -13,6 +14,7 @@ import { removeTokens } from '@/utils'
 const UserDropdown = () => {
   const [isOpen, setIsOpen] = useState(false)
   const dispatch = useDispatch()
+  const router = useRouter()
 
   const { user } = useUser()
 
@@ -23,7 +25,7 @@ const UserDropdown = () => {
   const handleLogout = () => {
     removeTokens()
     dispatch(setAuthState(false))
-    window.location.href = '/'
+    router.push('/')
   }
 
   const toggleDropdown = () => setIsOpen(isOpen => !isOpen)
