@@ -1,16 +1,11 @@
-import api from '@/api'
-
 import { NotificationType } from '@/types/models/notification'
+import { mockNotificationService } from '@/utils'
 
-export const fetchNotifications = async () => {
-  const { data: notifications } =
-    await api.get<NotificationType[]>('/Notifications')
+export const fetchNotifications = async (): Promise<NotificationType[]> =>
+  mockNotificationService.getNotifications()
 
-  return notifications
-}
+export const markAsRead = async (id: number): Promise<void> =>
+  mockNotificationService.markAsRead(id)
 
-export const markAsRead = async (id: number) =>
-  await api.put(`/Notifications/${id}/read`)
-
-export const deleteAllNotifications = async () =>
-  await api.delete('/Notifications')
+export const deleteAllNotifications = async (): Promise<void> =>
+  mockNotificationService.deleteAllNotifications()

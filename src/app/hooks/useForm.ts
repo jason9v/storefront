@@ -1,3 +1,5 @@
+'use client'
+
 import { ChangeEvent, SetStateAction, useState } from 'react'
 import { ZodSchema } from 'zod'
 
@@ -9,6 +11,7 @@ type UseFormReturn<T> = {
   ) => (event: ChangeEvent<HTMLInputElement>) => void
   validate: () => boolean
   setErrors: (value: SetStateAction<Record<keyof T, string>>) => void
+  setFormData: (value: SetStateAction<T>) => void
 }
 
 const useForm = <T extends Record<string, any>>(
@@ -51,7 +54,7 @@ const useForm = <T extends Record<string, any>>(
       }))
     }
 
-  return { formData, errors, handleChange, validate, setErrors }
+  return { formData, errors, handleChange, validate, setErrors, setFormData }
 }
 
 export default useForm

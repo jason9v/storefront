@@ -1,11 +1,13 @@
+'use client'
+
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 
 import { useDispatch } from 'react-redux'
 
-import { Item } from '@/types/models/item'
+import { Item } from '@/types'
 
-import { addToCart } from '@/store/slices/cartSlice'
+import { addToCart } from '@/store'
 
 type OrderItemProps = {
   item: Item

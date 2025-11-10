@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { Item } from '@/types/models/item'
 
-type CartItem = Omit<Item, 'descriptionKey'> & {
+export type CartItem = Omit<Item, 'descriptionKey'> & {
   quantity: number
 }
 

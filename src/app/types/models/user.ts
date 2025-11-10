@@ -10,6 +10,7 @@ export type User = {
   email?: string
   name?: string
   roleId: Role
+  role?: Role
 }
 
 export type UsersResponse = PaginationType & {

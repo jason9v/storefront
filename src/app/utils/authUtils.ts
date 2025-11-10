@@ -1,27 +1,27 @@
-import { jwtDecode } from 'jwt-decode'
-
-import AuthTokenPayload from '@/types/auth-token-payload'
+export const decodeToken = (token: string): any => {
+  try {
+    const decoded = atob(token)
+    return JSON.parse(decoded)
+  } catch (error) {
+    console.error('Failed to decode token:', error)
+    return null
+  }
+}
 
 export const decodeUserFromToken = (token: string) => {
   try {
-    const decoded = jwtDecode<AuthTokenPayload>(token)
+    const decoded = decodeToken(token)
 
-    return {
-      id: Number(
-        decoded[
-          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
-        ]
-      ),
-      name: decoded[
-        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'
-      ],
-      email:
-        decoded[
-          'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
-        ]
-    }
+    if (decoded && decoded.email)
+      return {
+        id: decoded.id || 0,
+        name: decoded.name || '',
+        email: decoded.email || ''
+      }
+
+    return null
   } catch (error) {
-    console.error('Failed to decode JWT:', error)
-    return
+    console.error('Failed to decode token:', error)
+    return null
   }
 }

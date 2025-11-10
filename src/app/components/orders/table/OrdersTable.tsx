@@ -1,31 +1,27 @@
+'use client'
+
 import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 
 import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
 
-import useOrderUpdates from '@/hooks/useOrderUpdates'
+import { fetchOrderStats } from '@/api/services'
 
-import { fetchOrderStats } from '@/api/services/orders'
+import { LoadingSpinner, Snackbar, Pagination } from '@/components/ui'
 
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import Snackbar from '@/components/ui/Snackbar'
-import Pagination from '@/components/ui/Pagination'
+import { OrderStatCard, OrdersFilter } from '@/components/orders'
 
-import OrderStatCard from '@/components/orders/OrderStatCard'
-
-import OrdersFilter from '../OrdersFilter'
-import OrderRow from './OrderRow'
-import OrdersTableHeader from './OrdersTableHeader'
+import { OrderRow, OrdersTableHeader } from './'
 
 import { ORDERS_PAGE_SIZE } from '@/constants/pagination'
 
 import {
   OrderFilterType,
   OrdersResponse,
-  OrderStats
-} from '@/types/models/order'
-import { PaginationParams } from '@/types/pagination'
+  OrderStats,
+  PaginationParams
+} from '@/types'
 
 type OrdersTableProps = {
   fetchOrders: (
@@ -69,16 +65,14 @@ const OrdersTable = ({ fetchOrders, isMyOrders = false }: OrdersTableProps) => {
         { pageNumber: currentPage, pageSize: ORDERS_PAGE_SIZE },
         filter || {}
       ),
-    staleTime: 60000
+    staleTime: Infinity
   })
 
   const { data: stats } = useQuery<OrderStats, Error>({
     queryKey: ['stats'],
     queryFn: fetchOrderStats,
-    staleTime: 60000
+    staleTime: Infinity
   })
-
-  useOrderUpdates(queryKey, filter)
 
   useEffect(() => {
     if (isError)
@@ -108,6 +102,23 @@ const OrdersTable = ({ fetchOrders, isMyOrders = false }: OrdersTableProps) => {
 
   if (isLoading) return <LoadingSpinner />
 
+  if (isError && error)
+    return (
+      <div className="m-10">
+        <div className="text-center py-8">
+          <p className="text-red-500 dark:text-red-400">
+            {translations(error?.message || 'error')}
+          </p>
+        </div>
+        <Snackbar
+          {...snackbar}
+          onClose={() =>
+            setSnackbar(previousState => ({ ...previousState, open: false }))
+          }
+        />
+      </div>
+    )
+
   return (
     <div className="m-10">
       <div className="flex flex-col sm:flex-row justify-between items-center">
@@ -120,7 +131,7 @@ const OrdersTable = ({ fetchOrders, isMyOrders = false }: OrdersTableProps) => {
 
       <hr className="my-10 border-gray-300 dark:border-gray-600" />
 
-      {!isError && paginatedOrders && (
+      {paginatedOrders && (
         <>
           {!isMyOrders && (
             <div className="flex justify-center lg:justify-start space-x-6 mb-8">
@@ -158,6 +169,7 @@ const OrdersTable = ({ fetchOrders, isMyOrders = false }: OrdersTableProps) => {
                       expandedOrderId={expandedOrderId}
                       onToggleExpand={setExpandedOrderId}
                       onStatusChangeSuccess={handleStatusUpdateSuccess}
+                      queryKey={queryKey}
                       isFirst={index === 0}
                       isLast={index === paginatedOrders.orders.length - 1}
                     />

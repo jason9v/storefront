@@ -1,13 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-import { getAccessToken } from '@/utils/cookieUtils'
-
 type AuthState = {
   isAuthenticated: boolean
 }
 
 const initialState: AuthState = {
-  isAuthenticated: !!getAccessToken()
+  isAuthenticated: false
 }
 
 const authSlice = createSlice({

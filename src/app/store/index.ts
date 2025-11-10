@@ -11,5 +11,8 @@ const store = configureStore({
 })
 
 export type RootState = ReturnType<typeof store.getState>
+export type AppDispatch = typeof store.dispatch
 
 export default store
+export * from './slices'
+export type { CartItem } from './slices/cartSlice'

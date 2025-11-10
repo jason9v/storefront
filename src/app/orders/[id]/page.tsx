@@ -5,27 +5,20 @@ import { useTranslations } from 'next-intl'
 import Image from 'next/image'
 import { useLocale } from 'use-intl'
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 
-import useSignalR from '@/hooks/useSignalR'
+import { fetchOrderById } from '@/api/services'
 
-import { fetchOrderById } from '@/api/services/orders'
+import { LoadingSpinner, Snackbar, Pagination } from '@/components/ui'
 
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import Snackbar from '@/components/ui/Snackbar'
-import Pagination from '@/components/ui/Pagination'
-
-import OrderStatus from '@/components/orders/OrderStatus'
-
-import { OrderStatusEnum, OrderType } from '@/types/models/order'
+import { OrderStatus } from '@/components/orders'
 
 const ITEMS_PER_PAGE = 4
 
 const Order = () => {
   const { id } = useParams<{ id: string }>()
   const locale = useLocale()
-  const queryClient = useQueryClient()
 
   const translations = useTranslations('Order')
   const itemTranslations = useTranslations('Items')
@@ -36,7 +29,7 @@ const Order = () => {
   const query = useQuery({
     queryKey: ['order', id],
     queryFn: () => fetchOrderById(Number(id)),
-    staleTime: 60000
+    staleTime: Infinity
   })
 
   const { data: order, isLoading, error } = query
@@ -44,25 +37,6 @@ const Order = () => {
   useEffect(() => {
     if (error) setSnackbarOpen(true)
   }, [error])
-
-  useSignalR('/orderUpdateHub', [
-    {
-      eventName: 'ReceivedOrderStatusUpdate',
-      callback: async ({
-        id: orderId,
-        status
-      }: {
-        id: number
-        status: OrderStatusEnum
-      }) => {
-        if (orderId !== Number(id)) return
-
-        queryClient.setQueryData<OrderType>(['order', id], oldOrder => {
-          if (oldOrder) return { ...oldOrder, status }
-        })
-      }
-    }
-  ])
 
   if (isLoading) return <LoadingSpinner />
 
@@ -85,7 +59,7 @@ const Order = () => {
     : ''
 
   const orderDetails = [
-    { label: 'total', value: `€ ${order?.totalPrice}` },
+    { label: 'total', value: `€ ${order?.totalPrice.toFixed(2)}` },
     { label: 'date', value: formattedDate },
     {
       label: 'status',

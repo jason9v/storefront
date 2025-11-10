@@ -1,11 +1,12 @@
+'use client'
+
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
 import { useRef, useState } from 'react'
 
-import useClickOutside from '@/hooks/useClickOutside'
-import useDropdownPosition from '@/hooks/useDropdownPosition'
-import { getOrderStatusLabels } from '@/utils/orderUtils'
-import { OrderStatusEnum } from '@/types/models/order'
+import { useClickOutside, useDropdownPosition } from '@/hooks'
+import { getOrderStatusLabels } from '@/utils'
+import { OrderStatusEnum } from '@/types'
 
 type OrderStatusProps = {
   status: OrderStatusEnum

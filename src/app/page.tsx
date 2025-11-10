@@ -2,8 +2,7 @@
 
 import { useSelector } from 'react-redux'
 
-import ItemSelection from '@/components/items/ItemSelection'
-import Cart from '@/components/Cart'
+import { ItemSelection, Cart } from '@/components'
 
 import { RootState } from '@/store'
 

@@ -1,13 +1,13 @@
 import axios, { AxiosInstance } from 'axios'
 
-import { fetchNewToken } from '@/api/services/auth'
+import { fetchNewToken } from '@/api/services'
 
 import {
   getAccessToken,
   getRefreshToken,
   removeTokens,
   setTokens
-} from '@/utils/cookieUtils'
+} from '@/utils'
 
 const createApiClient = (): AxiosInstance => {
   const instance = axios.create({

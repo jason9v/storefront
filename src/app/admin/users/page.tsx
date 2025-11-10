@@ -3,21 +3,15 @@
 import { useTranslations } from 'next-intl'
 import { useState, useCallback, ChangeEvent } from 'react'
 
-import { useUsersMutation } from '@/hooks/users/useUsersMutation'
-import { useUsersSignalR } from '@/hooks/users/useUsersSignalR'
-
-import { useUsersQuery } from '@/hooks/users/useUsersQuery'
+import { useUsersMutation, useUsersQuery } from '@/hooks/users'
 
 import withAdminRedirect from '@/hoc/withAdminRedirect'
 
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import Snackbar from '@/components/ui/Snackbar'
+import { LoadingSpinner, Snackbar } from '@/components/ui'
 
-import { SearchBar } from '@/components/users/SearchBar'
-import NoUsersMessage from '@/components/users/NoUsersMessage'
-import UserList from '@/components/users/list/UserList'
+import { SearchBar, NoUsersMessage, UserList } from '@/components/users'
 
-import { Role } from '@/types/models/user'
+import { Role } from '@/types'
 
 const UsersPanel = () => {
   const translations = useTranslations('UsersPanel')
@@ -43,8 +37,6 @@ const UsersPanel = () => {
   )
 
   const updateRoleMutation = useUsersMutation(searchTerm, currentPage)
-
-  useUsersSignalR({ searchTerm, currentPage })
 
   const handleRoleChange = useCallback(
     (params: { userId: number; roleId: Role }) => {

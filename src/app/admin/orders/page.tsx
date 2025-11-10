@@ -1,10 +1,10 @@
 'use client'
 
-import { fetchAllOrders } from '@/api/services/orders'
+import { fetchAllOrders } from '@/api/services'
 
 import withAdminRedirect from '@/hoc/withAdminRedirect'
 
-import OrdersTable from '@/components/orders/table/OrdersTable'
+import { OrdersTable } from '@/components/orders'
 
 const OrdersPanel = () => <OrdersTable fetchOrders={fetchAllOrders} />
 

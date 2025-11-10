@@ -1,10 +1,12 @@
+'use client'
+
 import { useLocale } from 'use-intl'
 import { useRef, useState } from 'react'
 import Image from 'next/image'
 
-import useClickOutside from '@/hooks/useClickOutside'
+import { useClickOutside } from '@/hooks'
 
-import { setLocaleInCookie } from '@/utils/localeUtils'
+import { setLocaleInCookie } from '@/utils'
 
 type Language = {
   code: string
@@ -20,8 +22,9 @@ const LanguageDropdown = () => {
   useClickOutside([ref], () => setIsOpen(false))
 
   const languages: Language[] = [
+    { code: 'en', flag: '/icons/flags/en.png' },
     { code: 'it', flag: '/icons/flags/it.png' },
-    { code: 'en', flag: '/icons/flags/en.png' }
+    { code: 'nl', flag: '/icons/flags/nl.png' }
   ]
 
   const currentLanguage = languages.find(({ code }) => code === locale)

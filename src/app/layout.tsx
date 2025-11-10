@@ -4,16 +4,15 @@ import { ReactNode } from 'react'
 import { Metadata } from 'next'
 import { getMessages, getLocale } from 'next-intl/server'
 
-import Navbar from '@/components/Navbar'
+import { Navbar, ProtectedContent } from '@/components'
 import Providers from '@/providers'
-import ProtectedContent from '@/components/auth/ProtectedContent'
 
 export const metadata: Metadata = {
-  title: 'LimitlessFit',
-  description: `LimitlessFit is an online shop offering a wide range of fitness and wellness products to 
-                support your health journey. From high-quality workout gear to supplements and recovery tools, 
-                our carefully curated collection helps you achieve your fitness goals. 
-                Explore our products and elevate your wellness routine.`
+  title: 'Store Hub',
+  description: `Online store offering a wide range of products to 
+                support your journey. From high-quality items to essential tools, 
+                our carefully curated collection helps you achieve your goals. 
+                Explore our products and enhance your experience.`
 }
 
 const RootLayout = async ({ children }: { children: ReactNode }) => {

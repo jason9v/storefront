@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { useLocale } from 'use-intl'
 import Image from 'next/image'
@@ -5,11 +7,11 @@ import Image from 'next/image'
 import OrderStatus from '../OrderStatus'
 import OrderItems from './OrderItems'
 
-import { updateOrderStatus } from '@/api/services/orders'
+import { useUpdateOrderStatus } from '@/hooks'
 
-import { formatRelativeDate } from '@/utils/dateUtils'
+import { formatRelativeDate } from '@/utils'
 
-import { OrderType, OrderStatusEnum } from '@/types/models/order'
+import { OrderType, OrderStatusEnum, OrderFilterType } from '@/types'
 
 type OrderRowProps = {
   order: OrderType
@@ -17,6 +19,7 @@ type OrderRowProps = {
   expandedOrderId: number | null
   onToggleExpand: (orderId: number) => void
   onStatusChangeSuccess?: () => void
+  queryKey: (string | number | OrderFilterType | null)[]
   isFirst?: boolean
   isLast?: boolean
 }
@@ -27,11 +30,17 @@ const OrderRow = ({
   expandedOrderId,
   onToggleExpand,
   onStatusChangeSuccess,
+  queryKey,
   isFirst = false,
   isLast = false
 }: OrderRowProps) => {
   const { id, date, username, totalPrice, status, items } = order
   const locale = useLocale()
+
+  const updateOrderStatusMutation = useUpdateOrderStatus(
+    queryKey,
+    onStatusChangeSuccess
+  )
 
   const formattedTraditionalDate = new Intl.DateTimeFormat(locale, {
     day: '2-digit',
@@ -42,12 +51,13 @@ const OrderRow = ({
   const formattedRelativeDate = formatRelativeDate(date, locale)
   const paddingClasses = `${isFirst && 'pt-8'} ${isLast && 'pb-12'}`
 
-  const handleStatusChange = async (newStatus: OrderStatusEnum) => {
+  const handleStatusChange = (newStatus: OrderStatusEnum) => {
     if (status === Number(newStatus)) return
 
-    await updateOrderStatus(id, newStatus)
-
-    onStatusChangeSuccess?.()
+    updateOrderStatusMutation.mutate({
+      orderId: id,
+      newStatus
+    })
   }
 
   return (
@@ -83,7 +93,7 @@ const OrderRow = ({
         )}
 
         <td className={`p-3 px-8 font-normal ${paddingClasses}`}>
-          € {totalPrice}
+          € {totalPrice.toFixed(2)}
         </td>
 
         <td className={`p-3 px-8 ${paddingClasses}`}>

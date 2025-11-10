@@ -13,7 +13,8 @@ const withAdminRedirect = <P extends object>(
     const router = useRouter()
 
     useEffect(() => {
-      if (user && user.role !== Role.Admin) router.push('/')
+      if (user && user.role !== Role.Admin && user.roleId !== Role.Admin)
+        router.push('/')
     }, [user, router])
 
     return <WrappedComponent {...props} />

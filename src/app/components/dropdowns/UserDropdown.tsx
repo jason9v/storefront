@@ -2,18 +2,16 @@
 
 import { useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { useRouter } from 'next/navigation'
-import Cookies from 'js-cookie'
 
-import { setAuthState } from '@/store/slices/authSlice'
-import useUser from '@/hooks/useUser'
+import { setAuthState } from '@/store'
+import { useUser, useClickOutside } from '@/hooks'
 
-import SubmitButton from '@/components/buttons/SubmitBotton'
-import useClickOutside from '@/hooks/useClickOutside'
+import { SubmitButton } from '@/components/buttons'
+
+import { removeTokens } from '@/utils'
 
 const UserDropdown = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const router = useRouter()
   const dispatch = useDispatch()
 
   const { user } = useUser()
@@ -23,11 +21,9 @@ const UserDropdown = () => {
   useClickOutside([ref], () => setIsOpen(false))
 
   const handleLogout = () => {
-    Cookies.remove('accessToken')
-
-    router.refresh()
-
+    removeTokens()
     dispatch(setAuthState(false))
+    window.location.href = '/'
   }
 
   const toggleDropdown = () => setIsOpen(isOpen => !isOpen)

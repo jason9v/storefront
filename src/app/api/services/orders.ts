@@ -1,62 +1,185 @@
-import api from '@/api'
-
-import AxiosErrorWithMessageKey from '@/types/axios-error'
-import { PaginationParams } from '@/types/pagination'
 import {
   OrderType,
-  OrderFilterType,
   OrderRequest,
-  OrdersResponse,
   OrderStatusEnum,
-  OrderStats
-} from '@/types/models/order'
+  OrderFilterType,
+  OrdersResponse,
+  OrderStats,
+  PaginationParams
+} from '@/types'
+import {
+  mockOrderService,
+  mockUserService,
+  mockNotificationService
+} from '@/utils'
+import {
+  decodeUserFromToken,
+  getAccessToken,
+  checkOrderAgainstFilters
+} from '@/utils'
+import { fetchItems } from './items'
 
-export const createOrder = async (request: OrderRequest) => {
-  const { data: order } = await api.post<OrderType>('/Orders', request)
+const getAuthenticatedUser = () => {
+  const token = getAccessToken()
+  if (!token) throw new Error('unauthorized')
+
+  const user = decodeUserFromToken(token)
+  if (!user) throw new Error('unauthorized')
+
+  return user
+}
+
+const paginateOrders = (
+  orders: OrderType[],
+  params: PaginationParams
+): OrdersResponse => {
+  const startIndex = (params.pageNumber - 1) * params.pageSize
+  const endIndex = startIndex + params.pageSize
+  const paginatedOrders = orders.slice(startIndex, endIndex)
+
+  return {
+    orders: paginatedOrders,
+    totalItems: orders.length,
+    totalPages: Math.ceil(orders.length / params.pageSize)
+  }
+}
+
+const filterOrders = (
+  orders: OrderType[],
+  filter: OrderFilterType
+): OrderType[] => {
+  if (!filter || Object.keys(filter).length === 0) return orders
+  return orders.filter(order => checkOrderAgainstFilters(order, filter))
+}
+
+export const createOrder = async (
+  request: OrderRequest
+): Promise<OrderType> => {
+  const user = getAuthenticatedUser()
+
+  const items = await fetchItems({ pageNumber: 1, pageSize: 100 })
+  const itemMap = new Map(items.items.map(item => [item.id, item]))
+
+  const orderItems = request.items.map(({ itemId, quantity }) => {
+    const item = itemMap.get(itemId)
+    if (!item) throw new Error(`itemNotFound: ${itemId}`)
+
+    return { ...item, quantity }
+  })
+
+  const totalPrice = orderItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  )
+
+  const order = mockOrderService.createOrder({
+    username: user.email || '',
+    totalPrice,
+    items: orderItems
+  })
 
   return order
 }
 
-export const fetchOrderById = async (id: number) => {
-  try {
-    const { data: order } = await api.get<OrderType>(`/Orders/${id}`)
+export const fetchOrderById = async (id: number): Promise<OrderType> => {
+  const order = mockOrderService.getOrderById(id)
+  if (!order) throw new Error('orderNotFound')
 
-    return order
-  } catch (error) {
-    const { messageKey } =
-      (error as AxiosErrorWithMessageKey).response?.data || {}
-
-    throw new Error(messageKey)
-  }
+  return order
 }
 
 export const fetchMyOrders = async (
-  { pageNumber, pageSize }: PaginationParams,
-  { startDate, endDate, status }: OrderFilterType
-) => {
-  const { data: orders } = await api.get<OrdersResponse>('/Orders/my-orders', {
-    params: { pageNumber, pageSize, startDate, endDate, status }
+  params: PaginationParams,
+  filter: OrderFilterType = {}
+): Promise<OrdersResponse> => {
+  const user = getAuthenticatedUser()
+
+  let dbUser = mockUserService.getUserById(user.id || 0)
+
+  if (!dbUser && user.email) dbUser = mockUserService.getUserByEmail(user.email)
+
+  const userEmail = dbUser?.email || user.email
+
+  if (!userEmail)
+    return {
+      orders: [],
+      totalItems: 0,
+      totalPages: 0
+    }
+
+  const allOrders = mockOrderService
+    .getOrders()
+    .filter(order => order.username === userEmail)
+
+  const sortedOrders = [...allOrders].sort((a, b) => {
+    const dateA = new Date(a.date).getTime()
+    const dateB = new Date(b.date).getTime()
+
+    return dateB - dateA
   })
 
-  return orders
+  const filteredOrders = filterOrders(sortedOrders, filter)
+
+  return paginateOrders(filteredOrders, params)
 }
 
 export const fetchAllOrders = async (
-  { pageNumber, pageSize }: PaginationParams,
-  { startDate, endDate, status }: OrderFilterType
-) => {
-  const { data: orders } = await api.get<OrdersResponse>('/Orders/all', {
-    params: { pageNumber, pageSize, startDate, endDate, status }
-  })
+  params: PaginationParams,
+  filter: OrderFilterType = {}
+): Promise<OrdersResponse> => {
+  const allOrders = mockOrderService.getOrders()
+  const filteredOrders = filterOrders(allOrders, filter)
 
-  return orders
+  return paginateOrders(filteredOrders, params)
 }
 
-export const fetchOrderStats = async () => {
-  const { data: stats } = await api.get<OrderStats>('/Orders/stats')
+export const fetchOrderStats = async (): Promise<OrderStats> => {
+  const orders = mockOrderService.getOrders()
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const stats: OrderStats = {
+    deliveredToday: 0,
+    pendingOrders: 0,
+    shippingOrders: 0
+  }
+
+  orders.forEach(order => {
+    const orderDate = new Date(order.date)
+    orderDate.setHours(0, 0, 0, 0)
+
+    if (
+      order.status === OrderStatusEnum.Delivered &&
+      orderDate.getTime() === today.getTime()
+    )
+      stats.deliveredToday++
+
+    if (order.status === OrderStatusEnum.Pending) stats.pendingOrders++
+
+    if (order.status === OrderStatusEnum.Shipping) stats.shippingOrders++
+  })
 
   return stats
 }
 
-export const updateOrderStatus = async (id: number, status: OrderStatusEnum) =>
-  await api.patch(`/Orders/${id}/status`, status)
+export const updateOrderStatus = async (
+  orderId: number,
+  newStatus: OrderStatusEnum
+): Promise<void> => {
+  mockOrderService.updateOrderStatus(orderId, newStatus)
+
+  const order = mockOrderService.getOrderById(orderId)
+  if (!order) return
+
+  const targetUser = mockUserService.getUserByEmail(order.username)
+  if (!targetUser) return
+
+  mockNotificationService.createNotification({
+    messageKey: 'orderStatusUpdate',
+    isRead: false,
+    additionalData: JSON.stringify({
+      orderId: order.id,
+      status: OrderStatusEnum[newStatus]
+    })
+  })
+}

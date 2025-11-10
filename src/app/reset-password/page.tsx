@@ -1,27 +1,25 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { FormEvent, useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { z } from 'zod'
-import useForm from '@/hooks/useForm'
+import { useForm } from '@/hooks'
 
-import { resetPassword } from '@/api/services/auth'
+import { resetPassword } from '@/api/services'
 
-import Input from '@/components/ui/Input'
-import Snackbar from '@/components/ui/Snackbar'
-import SubmitButton from '@/components/buttons/SubmitBotton'
+import { Input, Snackbar } from '@/components/ui'
+import { SubmitButton } from '@/components/buttons'
 
 const ResetPassword = () => {
   const translations = useTranslations('ResetPassword')
   const registerTranslations = useTranslations('Register')
 
   const router = useRouter()
-
-  const searchParams = new URLSearchParams(window.location.search)
+  const searchParams = useSearchParams()
 
   const token = searchParams.get('token')
   const email = searchParams.get('email')
@@ -97,9 +95,18 @@ const ResetPassword = () => {
       return
     }
 
+    if (!token || !email) {
+      setSnackbar({
+        message: translations('invalidResetLink'),
+        open: true,
+        variant: 'error'
+      })
+      return
+    }
+
     mutation.mutate({
-      token: token as string,
-      email: email as string,
+      token,
+      email,
       password: password
     })
   }

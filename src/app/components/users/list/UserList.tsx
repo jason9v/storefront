@@ -1,4 +1,4 @@
-import { UserListItem } from '@/components/users/list/UserListItem'
+import UserListItem from './UserListItem'
 
 import Pagination from '@/components/ui/Pagination'
 

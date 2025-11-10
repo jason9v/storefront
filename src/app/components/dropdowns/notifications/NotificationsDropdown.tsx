@@ -1,9 +1,10 @@
+'use client'
+
 import { useTranslations } from 'next-intl'
 
 import { useState, useCallback, useRef } from 'react'
 
-import useNotifications from '@/hooks/useNotifications'
-import useClickOutside from '@/hooks/useClickOutside'
+import { useNotifications, useClickOutside } from '@/hooks'
 
 import NotificationsPanel from './NotificationPanel'
 import NotificationsTrigger from './NotificationsTrigger'

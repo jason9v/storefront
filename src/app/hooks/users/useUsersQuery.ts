@@ -1,3 +1,5 @@
+'use client'
+
 import { useQuery } from '@tanstack/react-query'
 import { UsersResponse } from '@/types/models/user'
 import { fetchUsers } from '@/api/services/users'
@@ -12,5 +14,5 @@ export const useUsersQuery = (searchTerm: string, currentPage: number) =>
         searchTerm,
         pageSize: USERS_PAGE_SIZE
       }),
-    staleTime: 60000
+    staleTime: Infinity
   })

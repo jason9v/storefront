@@ -2,11 +2,11 @@
 
 import { User } from '@/types/models/user'
 
-interface UserInfoProps {
+type UserInfoProps = {
   user: User
 }
 
-export const UserInfo = ({ user }: UserInfoProps) => (
+const UserInfo = ({ user }: UserInfoProps) => (
   <div className="flex items-center mb-3 sm:mb-0">
     <div
       className="flex items-center justify-center w-8 h-8 mr-3 rounded-full
@@ -24,3 +24,5 @@ export const UserInfo = ({ user }: UserInfoProps) => (
     </div>
   </div>
 )
+
+export default UserInfo

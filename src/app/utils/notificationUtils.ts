@@ -24,20 +24,8 @@ const MESSAGE_HANDLERS: {
   })
 }
 
-export const getNotificationMessage = <K extends NotificationKey>(
-  notification: Extract<NotificationType, { messageKey: K }>
-): MessageHandlerReturn<K> => {
-  const handler = MESSAGE_HANDLERS[notification.messageKey] as (
-    data: NotificationDataTypes[K]
-  ) => MessageHandlerReturn<K>
-
-  return handler(
-    parseNotificationData(notification.additionalData, notification.messageKey)
-  )
-}
-
 const parseNotificationData = <K extends NotificationKey>(
-  additionalData: string,
+  additionalData: string | undefined,
   key: K
 ): NotificationDataTypes[K] => {
   if (!additionalData) return {} as NotificationDataTypes[K]
@@ -63,3 +51,15 @@ const isValidNotificationData = <K extends NotificationKey>(
     orderStatusUpdate: ['orderId', 'status'],
     roleUpdated: ['role']
   }[key].every(field => field in data)
+
+export const getNotificationMessage = <K extends NotificationKey>(
+  notification: NotificationType & { messageKey: K }
+): MessageHandlerReturn<K> => {
+  const handler = MESSAGE_HANDLERS[notification.messageKey] as (
+    data: NotificationDataTypes[K]
+  ) => MessageHandlerReturn<K>
+
+  return handler(
+    parseNotificationData(notification.additionalData, notification.messageKey)
+  )
+}

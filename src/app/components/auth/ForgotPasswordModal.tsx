@@ -1,3 +1,5 @@
+'use client'
+
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
 
@@ -5,18 +7,14 @@ import { FormEvent, useState } from 'react'
 
 import { z } from 'zod'
 
-import { AxiosError } from 'axios'
+import { Input, Snackbar } from '@/components/ui'
+import { SubmitButton } from '@/components/buttons'
 
-import Input from '@/components/ui/Input'
-import Snackbar from '@/components/ui/Snackbar'
-
-import SubmitButton from '@/components/buttons/SubmitBotton'
-
-import useForm from '@/hooks/useForm'
+import { useForm } from '@/hooks'
 
 import { useMutation } from '@tanstack/react-query'
 
-import { forgotPassword } from '@/api/services/auth'
+import { forgotPassword } from '@/api/services'
 
 type ForgotPasswordModalProps = {
   onClose: () => void
@@ -26,7 +24,7 @@ const ForgotPasswordModal = ({ onClose }: ForgotPasswordModalProps) => {
   const translations = useTranslations('Login')
 
   const schema = z.object({
-    email: z.string().email()
+    email: z.email()
   })
 
   const { formData, errors, handleChange, validate } = useForm(schema, {
@@ -40,17 +38,26 @@ const ForgotPasswordModal = ({ onClose }: ForgotPasswordModalProps) => {
   }>({ open: false, message: '', variant: 'info' })
 
   const forgotPasswordMutation = useMutation({
-    mutationFn: async (email: string) => forgotPassword(email),
-    onSuccess: messageKey => {
+    mutationFn: async (email: string) => {
+      const messageKey = await forgotPassword(email)
+      return { messageKey, email }
+    },
+    onSuccess: ({ messageKey, email }) => {
       setSnackbar({
         open: true,
-        message: translations(messageKey),
+        message: `${translations(messageKey)}. Check the browser console for the reset code, or use the reset code displayed below.`,
         variant: 'success'
       })
 
-      setTimeout(() => onClose(), 3000)
+      setTimeout(() => {
+        setSnackbar({
+          open: true,
+          message: `Reset code has been generated. Check the browser console (F12) to see it. You can also navigate to /reset-password?email=${encodeURIComponent(email)}&token=YOUR_CODE`,
+          variant: 'info'
+        })
+      }, 1000)
     },
-    onError: (error: AxiosError) => {
+    onError: (error: Error) => {
       setSnackbar({
         open: true,
         message: translations(error.message),
@@ -110,6 +117,11 @@ const ForgotPasswordModal = ({ onClose }: ForgotPasswordModalProps) => {
             variant="thin"
             className="w-full my-5"
           />
+
+          <p className="text-xs text-foreground-secondary dark:text-foreground-secondary-dark mt-4 text-center">
+            Note: the reset code will be logged to the browser console. Check
+            the console (F12) after submitting.
+          </p>
         </form>
 
         <Snackbar

@@ -1,9 +1,8 @@
-import { AxiosResponse } from 'axios'
-
-import api from '@/api'
-
-import AuthTokenPayload from '@/types/auth-token-payload'
-import AxiosErrorWithMessageKey from '@/types/axios-error'
+import {
+  mockUserService,
+  mockPasswordService,
+  mockResetCodeService
+} from '@/utils'
 
 type Credentials = {
   email: string
@@ -22,66 +21,107 @@ type ResetPasswordRequest = {
   newPassword: string
 }
 
-const handleAuthRequest = async (url: string, formData: Credentials) => {
-  try {
-    const { data: payload }: AxiosResponse<AuthTokenPayload> = await api.post(
-      url,
-      formData
-    )
-    const { accessToken, refreshToken } = payload
-
-    return { accessToken, refreshToken }
-  } catch (error) {
-    const { messageKey } =
-      (error as AxiosErrorWithMessageKey).response?.data || {}
-
-    throw new Error(messageKey)
+const generateMockToken = (
+  email: string,
+  name: string,
+  role: string,
+  id?: number
+): string => {
+  const payload = {
+    id: id || 0,
+    email,
+    name,
+    role,
+    exp: Math.floor(Date.now() / 1000) + 3600
   }
+
+  return btoa(JSON.stringify(payload))
 }
 
-export const registerUser = async (formData: RegisterFormData) =>
-  handleAuthRequest('/Auth/register', formData)
-
-export const loginUser = async (formData: LoginFormData) =>
-  handleAuthRequest('/Auth/login', formData)
-
-export const fetchNewToken = async () => {
-  const { data: payload }: AxiosResponse<AuthTokenPayload> = await api.post(
-    '/Auth/refresh-token'
+const generateMockRefreshToken = (): string =>
+  btoa(
+    JSON.stringify({
+      refresh: true,
+      exp: Math.floor(Date.now() / 1000) + 604800
+    })
   )
-  const { accessToken } = payload
 
-  return accessToken
+export const registerUser = async (formData: RegisterFormData) => {
+  const existingUser = mockUserService.getUserByEmail(formData.email)
+
+  if (existingUser) throw new Error('userExists')
+
+  const newUser = mockUserService.createUser({
+    email: formData.email,
+    name: formData.name,
+    roleId: 2
+  })
+
+  mockPasswordService.setPassword(formData.email, formData.password)
+
+  const accessToken = generateMockToken(
+    formData.email,
+    formData.name,
+    'User',
+    newUser.id
+  )
+
+  const refreshToken = generateMockRefreshToken()
+
+  return { accessToken, refreshToken }
 }
+
+export const loginUser = async (formData: LoginFormData) => {
+  const user = mockUserService.getUserByEmail(formData.email)
+
+  console.log(user)
+  if (!user) throw new Error('passwordIncorrect')
+
+  const isValidPassword = mockPasswordService.validatePassword(
+    formData.email,
+    formData.password
+  )
+
+  if (!isValidPassword) throw new Error('passwordIncorrect')
+
+  const role = user.roleId === 1 ? 'Admin' : 'User'
+  const accessToken = generateMockToken(
+    user.email || '',
+    user.name || '',
+    role,
+    user.id
+  )
+
+  const refreshToken = generateMockRefreshToken()
+
+  return { accessToken, refreshToken }
+}
+
+export const fetchNewToken = async () => generateMockToken('', '', 'User')
 
 export const forgotPassword = async (email: string) => {
-  try {
-    const { data: response }: AxiosResponse<{ messageKey: string }> =
-      await api.post('/Auth/forgot-password', { email })
-    const { messageKey } = response
+  const user = mockUserService.getUserByEmail(email)
 
-    return messageKey
-  } catch (error) {
-    const { messageKey } =
-      (error as AxiosErrorWithMessageKey).response?.data || {}
-
-    throw new Error(messageKey)
+  if (!user) {
+    mockResetCodeService.generateResetCode(email)
+    return 'passwordResetEmailSent'
   }
+
+  mockResetCodeService.generateResetCode(email)
+
+  return 'passwordResetEmailSent'
 }
 
 export const resetPassword = async (request: ResetPasswordRequest) => {
-  try {
-    const { data: response }: AxiosResponse<{ messageKey: string }> =
-      await api.post('/Auth/reset-password', {
-        ...request
-      })
-    const { messageKey } = response
+  const isValidCode = mockResetCodeService.validateResetCode(
+    request.email,
+    request.resetCode
+  )
 
-    return messageKey
-  } catch (error) {
-    const { messageKey } =
-      (error as AxiosErrorWithMessageKey).response?.data || {}
+  if (!isValidCode) throw new Error('invalidResetCode')
 
-    throw new Error(messageKey)
-  }
+  mockPasswordService.updatePassword(request.email, request.newPassword)
+  mockResetCodeService.clearResetCode(request.email)
+
+  return 'passwordResetSuccess'
 }

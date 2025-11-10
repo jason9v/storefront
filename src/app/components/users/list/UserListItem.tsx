@@ -1,10 +1,12 @@
+'use client'
+
 import { useCallback } from 'react'
 
 import RoleDropdown from '@/components/dropdowns/RoleDropdown'
 
 import { User, Role } from '@/types/models/user'
 
-import { UserInfo } from '../UserInfo'
+import UserInfo from '../UserInfo'
 
 type UserListItemProps = {
   user: User
@@ -14,7 +16,7 @@ type UserListItemProps = {
   onRoleChange: (params: { userId: number; roleId: Role }) => void
 }
 
-export const UserListItem = ({
+const UserListItem = ({
   user,
   index,
   isDropdownOpen,
@@ -45,3 +47,5 @@ export const UserListItem = ({
     </li>
   )
 }
+
+export default UserListItem

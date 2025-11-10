@@ -5,7 +5,7 @@ import { RootState } from '@/store'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { RegisterForm } from '@/components/auth/AuthForm'
+import { RegisterForm } from '@/components/auth'
 
 const Register = () => {
   const isAuthenticated = useSelector(

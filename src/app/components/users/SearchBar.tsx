@@ -1,3 +1,5 @@
+'use client'
+
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
 
@@ -9,7 +11,7 @@ type SearchBarProps = {
   onClearSearch: () => void
 }
 
-export const SearchBar = ({
+const SearchBar = ({
   searchTerm,
   onSearchChange,
   onClearSearch
@@ -56,3 +58,5 @@ export const SearchBar = ({
     </div>
   )
 }
+
+export default SearchBar

@@ -1,12 +1,13 @@
+'use client'
+
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
 
 import { useState, useEffect, useRef } from 'react'
 
-import useClickOutside from '@/hooks/useClickOutside'
-import useDropdownPosition from '@/hooks/useDropdownPosition'
+import { useClickOutside, useDropdownPosition } from '@/hooks'
 
-import { Role } from '@/types/models/user'
+import { Role } from '@/types'
 
 type RoleDropdownProps = {
   role: Role

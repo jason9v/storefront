@@ -1,8 +1,8 @@
 'use client'
 
-import { fetchMyOrders } from '@/api/services/orders'
+import { fetchMyOrders } from '@/api/services'
 
-import OrdersTable from '@/components/orders/table/OrdersTable'
+import { OrdersTable } from '@/components/orders'
 
 const MyOrders = () => (
   <OrdersTable fetchOrders={fetchMyOrders} isMyOrders={true} />

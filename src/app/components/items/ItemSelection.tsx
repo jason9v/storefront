@@ -1,12 +1,12 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 
-import { fetchItems } from '@/api/services/items'
+import { fetchItems } from '@/api/services'
 
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import Snackbar from '@/components/ui/Snackbar'
-import Pagination from '@/components/ui/Pagination'
+import { LoadingSpinner, Snackbar, Pagination } from '@/components/ui'
 
 import ItemSelectionItem from './ItemSelectionItem'
 

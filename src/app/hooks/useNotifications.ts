@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+'use client'
 
-import useSignalR from '@/hooks/useSignalR'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
 import {
   deleteAllNotifications,
@@ -16,28 +16,8 @@ const useNotifications = () => {
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
     queryFn: fetchNotifications,
-    staleTime: 60000
+    staleTime: Infinity
   })
-
-  useSignalR('/notificationHub', [
-    {
-      eventName: 'NewNotification',
-      callback: (receivedNotification: NotificationType) => {
-        queryClient.setQueryData<NotificationType[]>(
-          ['notifications'],
-          (previousNotifications = []) => {
-            const isExisting = previousNotifications.some(
-              notification => notification.id === receivedNotification.id
-            )
-
-            return isExisting
-              ? previousNotifications
-              : [receivedNotification, ...previousNotifications]
-          }
-        )
-      }
-    }
-  ])
 
   const markAsReadMutation = useMutation({
     mutationFn: (id: number) => markAsRead(id),
@@ -83,7 +63,10 @@ const useNotifications = () => {
       queryClient.setQueryData(
         ['notifications'],
         context?.previousNotifications
-      )
+      ),
+    onSuccess: () => {
+      queryClient.setQueryData(['notifications'], [])
+    }
   })
 
   const unreadCount = notifications?.filter(

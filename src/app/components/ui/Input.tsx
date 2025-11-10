@@ -1,3 +1,5 @@
+'use client'
+
 import { ChangeEvent, useId, useState } from 'react'
 
 type InputProps = {
