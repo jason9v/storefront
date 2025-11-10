@@ -16,8 +16,9 @@ import { OrderStatus } from '@/components/orders'
 
 const ITEMS_PER_PAGE = 4
 
-const Order = () => {
-  const { id } = useParams<{ id: string }>()
+export const OrderClient = () => {
+  const params = useParams<{ id: string[] }>()
+  const id = Array.isArray(params.id) ? params.id[0] : params.id
   const locale = useLocale()
 
   const translations = useTranslations('Order')
@@ -164,5 +165,3 @@ const Order = () => {
     </div>
   )
 }
-
-export default Order
