@@ -28,10 +28,13 @@ const createApiClient = (): AxiosInstance => {
   instance.interceptors.response.use(
     response => response,
     async error => {
-      const { response: { status } = {}, config: originalRequest } = error
-      if (status !== 401 || originalRequest._retry) return Promise.reject(error)
+      const { response, config: originalRequest } = error
+      const status = response?.status
 
-      originalRequest._retry = true
+      if (status !== 401 || originalRequest?._retry)
+        return Promise.reject(error)
+
+      if (originalRequest) originalRequest._retry = true
 
       try {
         const refreshToken = getRefreshToken()
